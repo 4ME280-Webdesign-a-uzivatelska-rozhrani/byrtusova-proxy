@@ -1,60 +1,3 @@
-<!DOCTYPE html>
-<html lang="cs">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PF 2026 — FIS VŠE</title>
-<style>
-  body {
-    background-color: #000;
-    color: #00b050;
-    font-family: "Courier New", monospace;
-    margin: 0;
-    padding: 20px;
-    transition: background-color 0.2s ease;
-  }
-
-  #terminal {
-    white-space: pre-wrap;
-    line-height: 1.3em;
-    position: relative;
-  }
-
-  /* Blikající kurzor */
-  #cursor {
-    display: inline-block;
-    width: 8px;
-    height: 1em;
-    background-color: #00b050;
-    animation: blink 1s steps(1) infinite;
-    vertical-align: bottom;
-  }
-
-  @keyframes blink {
-    50% { opacity: 0; }
-  }
-
-  #finalImage {
-    display: none;
-    margin-top: 20px;
-    max-width: 100%;
-    border: 2px solid #00b050;
-    border-radius: 5px;
-  }
-
-  #pressKey {
-    display: none;
-    margin-top: 10px;
-    color: #fff;
-    font-size: 0.9em;
-  }
-</style>
-</head>
-<body>
-<div id="terminal"></div>
-<div id="pressKey">Press any key to continue...</div>
-<img id="finalImage" src="placeholder.png" alt="PF FIS 2026">
-
 <script>
 // ---------- ELEMENTY ----------
 const terminal = document.getElementById("terminal");
@@ -81,6 +24,7 @@ terminal.appendChild(cursor);
 const typeSoundUrl = "https://cdn.pixabay.com/download/audio/2022/03/15/audio_5bfb7b0f24.mp3?filename=typewriter-key-1-117234.mp3";
 const successSoundUrl = "https://cdn.pixabay.com/download/audio/2022/03/15/audio_939b5f7393.mp3?filename=notification-1-126517.mp3";
 
+let typeSoundEnabled = false;
 const typeSound = new Audio(typeSoundUrl);
 typeSound.volume = 0.2;
 
@@ -88,6 +32,7 @@ const successSound = new Audio(successSoundUrl);
 successSound.volume = 0.3;
 
 function playClick() {
+  if (!typeSoundEnabled) return;
   const click = typeSound.cloneNode();
   click.play().catch(()=>{});
 }
@@ -132,7 +77,7 @@ async function showLoadingBar() {
 
   const interval = setInterval(() => {
     if (progress <= total) {
-      const color = progress % 2 === 0 ? "#00b050" : "#66ff99"; // střídání odstínů
+      const color = progress % 2 === 0 ? "#00b050" : "#66ff99";
       barLine.innerHTML = `<span style="color:${color}">Loading final image: [${"=".repeat(progress)}${" ".repeat(total - progress)}] ${Math.floor((progress / total) * 100)}%</span>`;
       playClick();
       progress++;
@@ -148,7 +93,7 @@ async function showLoadingBar() {
   }, 100);
 }
 
-// ---------- BLIK OBRAZOVKY PO DOKONČENÍ ----------
+// ---------- BLIK OBRAZOVKY ----------
 function flashScreen() {
   document.body.style.backgroundColor = "#00b050";
   setTimeout(() => document.body.style.backgroundColor = "#000", 120);
@@ -158,6 +103,13 @@ function flashScreen() {
 function handleUserInput() {
   document.body.removeEventListener("click", handleUserInput);
   document.body.removeEventListener("keydown", handleUserInput);
+
+  // ✅ Aktivace zvuku po první interakci
+  typeSoundEnabled = true;
+  successSound.play().catch(()=>{}); // krátce přehraje, aby browser „odemknul“ audio
+  successSound.pause();
+  successSound.currentTime = 0;
+
   showLoadingBar();
 }
 
@@ -167,6 +119,3 @@ document.body.addEventListener("keydown", handleUserInput);
 // ---------- START ----------
 runTerminal();
 </script>
-</body>
-</html>
-

@@ -11,6 +11,7 @@
     font-family: "Courier New", monospace;
     margin: 0;
     padding: 20px;
+    transition: background-color 0.2s ease;
   }
 
   #terminal {
@@ -30,9 +31,7 @@
   }
 
   @keyframes blink {
-    50% {
-      opacity: 0;
-    }
+    50% { opacity: 0; }
   }
 
   #finalImage {
@@ -78,17 +77,22 @@ const cursor = document.createElement("span");
 cursor.id = "cursor";
 terminal.appendChild(cursor);
 
-// ---------- ZVUK PSANÍ ----------
-const typeSound = new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_5bfb7b0f24.mp3?filename=typewriter-key-1-117234.mp3");
+// ---------- ZVUKY ----------
+const typeSoundUrl = "https://cdn.pixabay.com/download/audio/2022/03/15/audio_5bfb7b0f24.mp3?filename=typewriter-key-1-117234.mp3";
+const successSoundUrl = "https://cdn.pixabay.com/download/audio/2022/03/15/audio_939b5f7393.mp3?filename=notification-1-126517.mp3";
+
+const typeSound = new Audio(typeSoundUrl);
 typeSound.volume = 0.2;
 
-// Funkce přehraje krátký klik (rychlejší než celé audio)
+const successSound = new Audio(successSoundUrl);
+successSound.volume = 0.3;
+
 function playClick() {
   const click = typeSound.cloneNode();
   click.play().catch(()=>{});
 }
 
-// ---------- FUNKCE PRO EFEKT PSANÍ ----------
+// ---------- EFEKT PSANÍ ----------
 function typeLine(line, delay = 40) {
   return new Promise(resolve => {
     let i = 0;
@@ -107,7 +111,7 @@ function typeLine(line, delay = 40) {
   });
 }
 
-// ---------- HLAVNÍ ANIMACE TERMINÁLU ----------
+// ---------- HLAVNÍ ANIMACE ----------
 async function runTerminal() {
   for (const line of lines) {
     await typeLine(line);
@@ -121,25 +125,33 @@ async function showLoadingBar() {
   pressKey.style.display = "none";
 
   const barLine = document.createElement("div");
-  barLine.textContent = "Loading final image: [";
   terminal.appendChild(barLine);
 
   let progress = 0;
   const total = 30;
 
   const interval = setInterval(() => {
-    if (progress < total) {
-      barLine.textContent = `Loading final image: [${"=".repeat(progress)}${" ".repeat(total - progress)}] ${Math.floor((progress / total) * 100)}%`;
-      progress++;
+    if (progress <= total) {
+      const color = progress % 2 === 0 ? "#00b050" : "#66ff99"; // střídání odstínů
+      barLine.innerHTML = `<span style="color:${color}">Loading final image: [${"=".repeat(progress)}${" ".repeat(total - progress)}] ${Math.floor((progress / total) * 100)}%</span>`;
       playClick();
+      progress++;
     } else {
       clearInterval(interval);
-      barLine.textContent = `Loading final image: [${"=".repeat(total)}] 100%\n`;
+      barLine.innerHTML = `<span style="color:#00ff66">Loading final image: [${"=".repeat(total)}] 100%</span>\n`;
+      flashScreen();
+      successSound.play().catch(()=>{});
       setTimeout(() => {
         finalImage.style.display = "block";
-      }, 500);
+      }, 600);
     }
   }, 100);
+}
+
+// ---------- BLIK OBRAZOVKY PO DOKONČENÍ ----------
+function flashScreen() {
+  document.body.style.backgroundColor = "#00b050";
+  setTimeout(() => document.body.style.backgroundColor = "#000", 120);
 }
 
 // ---------- REAKCE NA UŽIVATELE ----------
@@ -157,3 +169,4 @@ runTerminal();
 </script>
 </body>
 </html>
+
